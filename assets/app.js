@@ -18,8 +18,8 @@
   };
   const DEFINITIONS = [
     {key:'mode', tab:'distribucion', title:'Modalidad de ingreso', kicker:'CONVOCATORIA', orientation:'horizontal', single:true, wide:true, note:'Se conservan las ocho modalidades declaradas, incluidas las etiquetas específicas de Ciencias del Mar y Mendoza.'},
-    {key:'area', tab:'distribucion', title:'Gran área', kicker:'DISCIPLINAS', single:true, wide:true, height:390, note:'Las subcomisiones estratégicas pueden ser transversales. Cuando no se puede identificar una gran área, el caso permanece sin determinar.'},
-    {key:'commission', tab:'distribucion', title:'Comisión o subcomisión', kicker:'EVALUACIÓN', single:true, wide:true, scroll:true, height:490, note:'Nombres normalizados con documentación de la convocatoria 2023. En Fortalecimiento, una disciplina declarada no se convirtió automáticamente en una comisión ordinaria. Deslizá horizontalmente para recorrer las categorías; los nombres completos están en los datos y al pasar el puntero.'},
+    {key:'area', tab:'distribucion', title:'Gran área', kicker:'DISCIPLINAS', single:true, wide:true, height:390, excludedLabels:['Gran área sin determinar','Sin dato'], missingTitle:'Sin gran área identificada', note:'Las barras representan las cuatro grandes áreas oficiales. Los casos pendientes de identificación se informan aparte y siguen incluidos en las tablas, descargas y total de respuestas. Las temáticas estratégicas y los proyectos especiales pueden abarcar varias grandes áreas.'},
+    {key:'commission', tab:'distribucion', title:'Comisión o subcomisión', kicker:'EVALUACIÓN', single:true, wide:true, scroll:true, height:490, excludedLabels:['Comisión no especificada','Sin dato'], missingTitle:'Sin comisión identificada', note:'Nombres normalizados con documentación oficial. En Fortalecimiento se identifica la subcomisión ad hoc por la modalidad y la gran área, conservando separada la disciplina. Los casos pendientes se informan aparte y permanecen en las tablas y descargas. Deslizá horizontalmente para recorrer las categorías; los nombres completos están en los datos y al pasar el puntero.'},
     {key:'scholarship', tab:'situacion', title:'Situación de beca CONICET', kicker:'TIPO DE BECA', single:true, wide:true, height:390, note:'Sin beca CONICET no significa ausencia de otros trabajos o becas. Los casos sin dato sobre beca CONICET conservan sus otros vínculos clasificados.'},
     {key:'coverage', tab:'situacion', title:'Plazo de cobertura de beca CONICET', kicker:'COBERTURA', single:true, wide:true, height:365, note:'Solo becas CONICET identificadas. Las extensiones se clasifican Hasta el alta por actualización del responsable del relevamiento. Julio de 2026 es una interpretación contextual de un caso; no se lo reclasificó como beca vencida.'},
     {key:'links', tab:'situacion', title:'Otros vínculos y actividades actuales', kicker:'TRABAJO Y SOSTENIMIENTO', wide:true, scroll:true, height:480, note:'Integra información explícita y clasificaciones aprobadas de situación actual y otras respuestas. Cada caso cuenta una vez por vínculo. Incluye tres relatos de estadía en el exterior clasificados como trabajo por indicación del responsable del relevamiento.'},
@@ -111,16 +111,20 @@
   }
 
   function createCard(def) {
-    const rows = rowsFor(def), den = denominator(def), base = aggregateData.bases[def.key] || 0;
+    const allRows = rowsFor(def), rows = def.excludedLabels ? allRows.filter(([label]) => !def.excludedLabels.includes(label)) : allRows;
+    const missingRows = def.excludedLabels ? allRows.filter(([label]) => def.excludedLabels.includes(label)) : [];
+    const missingCount = missingRows.reduce((sum,[,n]) => sum+n,0);
+    const den = denominator(def), base = aggregateData.bases[def.key] || 0;
     const id = def.id || def.key;
     const card = document.createElement('article');card.className='card'+(def.wide ? ' wide' : '');card.id='card-'+id;
     let caption = def.bool ? `${number(den)} respuestas válidas de ${number(aggregateData.n)} en la selección` :
       def.percentage ? `Porcentaje sobre ${number(aggregateData.n)} respuestas · Selección múltiple` :
       `${number(base)} respuestas${def.single ? '' : ' con información clasificada'} · Cantidad por categoría`;
-    card.innerHTML=`<div class="card-head"><div><div class="card-kicker">${escape(def.kicker)}</div><h3>${escape(def.title)}</h3></div><div class="card-actions"><button type="button" class="table-button" aria-expanded="false" aria-controls="table-${id}" aria-label="Ver datos: ${escape(def.title)}">Datos</button><button type="button" class="png-button" aria-label="Descargar gráfico: ${escape(def.title)}">PNG ↓</button></div></div><p class="card-caption">${caption}</p><div class="chart-scroll"><div class="chart-inner"></div></div><div id="table-${id}" class="data-table-wrap" hidden>${tableMarkup(rows,def)}</div>`;
+    if (def.excludedLabels) caption=`${number(base-missingCount)} respuestas con categoría identificada de ${number(base)} en la selección · Cantidad por categoría`;
+    card.innerHTML=`<div class="card-head"><div><div class="card-kicker">${escape(def.kicker)}</div><h3>${escape(def.title)}</h3></div><div class="card-actions"><button type="button" class="table-button" aria-expanded="false" aria-controls="table-${id}" aria-label="Ver datos: ${escape(def.title)}">Datos</button><button type="button" class="png-button" aria-label="Descargar gráfico: ${escape(def.title)}">PNG ↓</button></div></div><p class="card-caption">${caption}</p><div class="chart-scroll"><div class="chart-inner"></div></div><div id="table-${id}" class="data-table-wrap" hidden>${tableMarkup(allRows,def)}</div>`;
     const inner = card.querySelector('.chart-inner');
     if (!base || !den || !rows.some(r => r[1])) {
-      inner.className='chart-no-data';inner.innerHTML='<strong>Sin respuestas para este gráfico</strong><span>Cambiá los filtros para explorar otros casos.</span>';
+      inner.className='chart-no-data';inner.innerHTML=missingCount ? '<strong>Sin categoría identificada en esta selección</strong><span>Los casos pendientes se detallan debajo y en la tabla de datos.</span>' : '<strong>Sin respuestas para este gráfico</strong><span>Cambiá los filtros para explorar otros casos.</span>';
       card.querySelector('.png-button').disabled=true;
     } else {
       const canvas = document.createElement('canvas');canvas.setAttribute('role','img');canvas.setAttribute('aria-label',`${def.title}. ${number(base)} respuestas. Los valores completos están disponibles en el botón Datos.`);inner.append(canvas);
@@ -165,6 +169,11 @@
     if (def.bool) {
       const missing=aggregateData.counts[def.key]?.['Sin respuesta'] || 0;
       const note=document.createElement('div');note.className='missing-note';note.textContent=`Sin respuesta: ${number(missing)}. Se muestran aparte del porcentaje Sí/No.`;card.append(note);
+    }
+    if (missingCount) {
+      const note=document.createElement('div');note.className='missing-note';
+      note.innerHTML=`<strong>${escape(def.missingTitle)}: ${number(missingCount)}.</strong> Incluidas en el total de la selección y en la tabla de datos.<br>${missingRows.map(([label,n]) => `${escape(label)}: ${number(n)}`).join(' · ')}`;
+      card.append(note);
     }
     if (def.others) {
       const detail = Object.entries(aggregateData.counts[def.others] || {}).sort((a,b) => b[1]-a[1] || a[0].localeCompare(b[0],'es'));

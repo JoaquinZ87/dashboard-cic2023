@@ -9,13 +9,13 @@ Dashboard del relevamiento de 365 respuestas, completado entre el 15 de septiemb
 - Becas extraordinarias, requisitos y trámite de alta.
 - Acciones colectivas y particularidades.
 
-Los filtros de provincia, gran área y modalidad se combinan y actualizan todos los gráficos. CABA tiene un recuadro ampliado y se cuenta una sola vez. Las tablas de cada gráfico contienen los valores completos. Se pueden descargar los conteos de la selección en CSV, cada gráfico en PNG y el mapa en SVG.
+Los filtros de provincia, gran área y modalidad se combinan y actualizan todos los gráficos. CABA tiene un recuadro ampliado y se cuenta una sola vez. Las tablas de cada gráfico contienen los valores completos. En los gráficos de gran área y comisión, los casos sin clasificación identificada se informan aparte de las barras y permanecen en tablas, descargas y totales. Se pueden descargar los conteos de la selección en CSV, cada gráfico en PNG y el mapa en SVG.
 
 ## Archivos
 
 - `index.html`: entrada para GitHub Pages.
 - `assets/app.js` y `assets/style.css`: interfaz y visualizaciones.
-- `assets/data.js`: conteos agregados en 135 grupos de provincia, gran área y modalidad.
+- `assets/data.js`: conteos agregados por provincia, gran área y modalidad.
 - `dashboard-cic2023.html`: versión completa sin conexión, con estilos, datos y biblioteca de gráficos integrados.
 - `.nojekyll`: permite servir directamente los archivos estáticos.
 
