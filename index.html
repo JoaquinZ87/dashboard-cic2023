@@ -34,11 +34,12 @@
       <div class="filter-heading"><span class="filter-icon">≡</span><strong>Explorá el relevamiento</strong><span>Los filtros se combinan</span></div>
       <div class="filter-fields">
         <label>Provincia de presentación<select id="province-filter"><option value="">Todas las provincias</option></select></label>
-        <label>Gran área<select id="area-filter"><option value="">Todas las grandes áreas</option></select></label>
+        <label>Gran área<select id="area-filter" aria-describedby="area-filter-note"><option value="">Todas las grandes áreas</option></select></label>
         <label>Modalidad de ingreso<select id="mode-filter"><option value="">Todas las modalidades</option></select></label>
         <button id="reset-filters" class="reset-button">Limpiar filtros ↺</button>
       </div>
       <div id="filter-status" role="status" aria-live="polite"></div>
+      <p id="area-filter-note" class="filter-explanation">El filtro de gran área usa solo áreas conocidas. En Temas Estratégicos y Proyectos Especiales, los datos de área están disponibles para una parte de las respuestas.</p>
     </section>
     <section class="kpis" aria-label="Indicadores de la selección" id="kpis"></section>
     <div class="section-heading"><div><div class="eyebrow" id="section-kicker"></div><h2 id="section-title"></h2><p id="section-description"></p></div><button id="print" class="text-button">Imprimir sección ↗</button></div>
@@ -46,6 +47,7 @@
     <section id="charts" class="charts" aria-labelledby="section-title"></section>
     <section class="reading-notes" id="metodologia">
       <details id="methodology"><summary>Cómo leer este relevamiento <span>Universos, porcentajes y criterios de clasificación</span></summary><div class="method-grid">
+        <div><h3>Modalidades y grandes áreas</h3><p>El gráfico de grandes áreas incluye General, Fortalecimiento y Exterior: 256 respuestas sin filtros, todas clasificadas. Temas Estratégicos y Tecnología tiene un gráfico por sector (56 respuestas) y Proyectos Especiales uno por proyecto o línea (53 respuestas). Cada gráfico usa el total de sus modalidades dentro de la selección.</p><p>En ambas modalidades especiales también se declara gran área al postular, pero sus anexos de resultados se organizan por sector o proyecto. No se deduce una gran área a partir de esas categorías. Fuentes: instructivos CONICET 2023 de <a href="https://convocatorias.conicet.gov.ar/wp-content/uploads/sites/3/publico/cic-temas-estrategicos-2023/Instructivo-Ingresos-TEMAS-ESTRATEGICOS-2023_518ce6a7cfff3242f3.pdf">Temas Estratégicos</a> y <a href="https://convocatorias.conicet.gov.ar/wp-content/uploads/sites/3/publico/proyectos-especiales-2023/Instructivo-Ingresos-P.E.-2023_bde53c10cb115b298f.pdf">Proyectos Especiales</a>, página 11.</p></div>
         <div><h3>Qué representan los números</h3><p>Se cuentan respuestas de esta encuesta, no el total de postulaciones a la convocatoria. La ubicación corresponde al lugar de presentación a carrera; puede ser distinta de la residencia actual.</p><p>El ranking de institutos se dejó para una etapa posterior.</p></div>
         <div><h3>Porcentajes y respuestas vacías</h3><p>En las preguntas Sí/No, el porcentaje usa solo respuestas válidas. Los vacíos se muestran aparte. Completar el trámite de alta no equivale a tener el ingreso efectivizado.</p><p>En acciones colectivas, el porcentaje usa todas las respuestas de la selección: sin filtros, 365. Las categorías múltiples pueden sumar más del 100 %.</p></div>
         <div><h3>Clasificación de comentarios</h3><p>Una respuesta puede pertenecer a varias categorías. Las categorías de un solo caso en acciones y particularidades se agruparon en Otros antes de aplicar filtros; esa agrupación permanece estable.</p><p>Las preguntas sobre situación actual y formas de permanencia conservan sus universos propios. No se reemplazaron los Sí/No a partir de los comentarios.</p></div>

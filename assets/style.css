@@ -12,3 +12,5 @@ main{margin-left:238px;max-width:1850px;padding:36px 38px 16px}.page-header{disp
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 
 @media(max-width:600px){.filter-fields{grid-template-columns:1fr}.filter-fields label:nth-child(n){grid-column:1;grid-row:auto;max-width:none}.filter-fields .reset-button{grid-column:1;grid-row:auto;text-align:right}.sidebar nav{display:grid;grid-template-columns:1fr 1fr;overflow:visible}.sidebar nav>a{white-space:normal;min-height:42px;padding:8px;font-size:10px}.card-actions button{min-height:29px}}
+
+.filter-explanation{margin:8px 0 0;color:var(--muted);font-size:10px;line-height:1.5}

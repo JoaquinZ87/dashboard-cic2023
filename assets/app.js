@@ -5,6 +5,7 @@
   const $ = id => document.getElementById(id);
   const number = value => new Intl.NumberFormat('es-AR').format(value);
   const percent = value => new Intl.NumberFormat('es-AR', {maximumFractionDigits:1, minimumFractionDigits:1}).format(value) + ' %';
+  const countPercent = (value, base) => `${number(value)} (${base ? percent(value/base*100) : '—'})`;
   const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const COLORS = {primary:'#247b74', dark:'#124e4c', orange:'#bf714f', muted:'#9aa89c', grid:'#e9eee6'};
   const YES_NO = ['Sí', 'No'];
@@ -17,8 +18,10 @@
     acciones: {kicker:'04 / ACCIONES Y PARTICULARIDADES', title:'Propuestas y situaciones a considerar', description:'Las acciones colectivas señaladas y los temas que aparecen en los comentarios de particularidades.'},
   };
   const DEFINITIONS = [
-    {key:'mode', tab:'distribucion', title:'Modalidad de ingreso', kicker:'CONVOCATORIA', orientation:'horizontal', single:true, wide:true, note:'Se conservan las ocho modalidades declaradas, incluidas las etiquetas específicas de Ciencias del Mar y Mendoza.'},
-    {key:'area', tab:'distribucion', title:'Gran área', kicker:'DISCIPLINAS', single:true, wide:true, height:390, excludedLabels:['Gran área sin determinar','Sin dato'], missingTitle:'Sin gran área identificada', note:'Las barras representan las cuatro grandes áreas oficiales. Los casos pendientes de identificación se informan aparte y siguen incluidos en las tablas, descargas y total de respuestas. Las temáticas estratégicas y los proyectos especiales pueden abarcar varias grandes áreas.'},
+    {key:'mode', tab:'distribucion', title:'Modalidad de ingreso', kicker:'CONVOCATORIA', orientation:'horizontal', single:true, wide:true, note:'Se conservan las etiquetas específicas de Tecnología, Ciencias del Mar y Mendoza. Se corrigen ocho modalidades mediante coincidencias nominales únicas con los anexos oficiales de CIC 2023.'},
+    {key:'disciplinaryArea', id:'area', tab:'distribucion', title:'Gran área — General, Fortalecimiento y Exterior', kicker:'DISTRIBUCIÓN DISCIPLINAR', single:true, wide:true, height:390, scoped:true, emptyNote:'Esta selección se presenta en los gráficos de Temas Estratégicos y Proyectos Especiales.', note:'Incluye únicamente General, Fortalecimiento y Exterior: 256 respuestas sin filtros, todas con gran área identificada. Los porcentajes usan las respuestas de esas modalidades que cumplen los filtros activos. Temas Estratégicos y Proyectos Especiales se muestran por sus sectores y proyectos en los gráficos siguientes; su gran área no se deduce de esas categorías.'},
+    {key:'strategicSector', tab:'distribucion', title:'Temas Estratégicos y Tecnología — sectores', kicker:'CLASIFICACIÓN DE LA MODALIDAD', single:true, wide:true, scroll:true, height:430, scoped:true, emptyNote:'No hay respuestas de Temas Estratégicos y Tecnología dentro de esta selección.', note:'Solo ingresos de Temas Estratégicos y Tecnología: 56 respuestas sin filtros. Cada barra corresponde a una subcomisión oficial de la convocatoria 2023. Los porcentajes se calculan sobre las respuestas de esta modalidad que cumplen los filtros. Deslizá horizontalmente para ver todos los sectores.'},
+    {key:'specialProject', tab:'distribucion', title:'Proyectos Especiales — proyectos y líneas', kicker:'CLASIFICACIÓN DE LA MODALIDAD', single:true, wide:true, scroll:true, height:430, scoped:true, emptyNote:'No hay respuestas de Proyectos Especiales dentro de esta selección.', note:'Solo ingresos de Proyectos Especiales: 53 respuestas sin filtros, incluidas las etiquetas específicas de Ciencias del Mar y Mendoza. Cada barra corresponde a un proyecto o línea oficial de 2023. Los porcentajes se calculan sobre las respuestas de esta modalidad que cumplen los filtros.'},
     {key:'commission', tab:'distribucion', title:'Comisión o subcomisión', kicker:'EVALUACIÓN', single:true, wide:true, scroll:true, height:490, excludedLabels:['Comisión no especificada','Sin dato'], missingTitle:'Sin comisión identificada', note:'Nombres normalizados con documentación oficial. En Fortalecimiento se identifica la subcomisión ad hoc por la modalidad y la gran área, conservando separada la disciplina. Los casos pendientes se informan aparte y permanecen en las tablas y descargas. Deslizá horizontalmente para recorrer las categorías; los nombres completos están en los datos y al pasar el puntero.'},
     {key:'scholarship', tab:'situacion', title:'Situación de beca CONICET', kicker:'TIPO DE BECA', single:true, wide:true, height:390, note:'Sin beca CONICET no significa ausencia de otros trabajos o becas. Los casos sin dato sobre beca CONICET conservan sus otros vínculos clasificados.'},
     {key:'coverage', tab:'situacion', title:'Plazo de cobertura de beca CONICET', kicker:'COBERTURA', single:true, wide:true, height:365, note:'Solo becas CONICET identificadas. Las extensiones se clasifican Hasta el alta por actualización del responsable del relevamiento. Julio de 2026 es una interpretación contextual de un caso; no se lo reclasificó como beca vencida.'},
@@ -90,7 +93,9 @@
       chart.getDatasetMeta(0).data.forEach((bar,index) => {
         const value = chart.data.datasets[0].data[index];
         if (!value) return;
-        const label = chart.$percent ? percent(value) : number(value);
+        const count = chart.$counts?.[index];
+        if (count === undefined) return;
+        const label = countPercent(count, chart.$base);
         ctx.textAlign = horizontal ? 'left' : 'center';
         ctx.textBaseline = horizontal ? 'middle' : 'bottom';
         ctx.fillText(label,horizontal ? bar.x+7 : bar.x,horizontal ? bar.y : bar.y-7);
@@ -106,7 +111,7 @@
   }
 
   function tableMarkup(rows, def) {
-    const den = denominator(def), showPercent = def.bool || def.percentage || def.single;
+    const den = denominator(def), showPercent = true;
     return `<table><thead><tr><th>Categoría</th><th class="num">Respuestas</th>${showPercent ? '<th class="num">Porcentaje</th>' : ''}</tr></thead><tbody>${rows.map(([label,n]) => `<tr><td>${escape(label)}</td><td class="num">${number(n)}</td>${showPercent ? `<td class="num">${den ? percent(n/den*100) : '—'}</td>` : ''}</tr>`).join('')}</tbody></table>`;
   }
 
@@ -119,12 +124,13 @@
     const card = document.createElement('article');card.className='card'+(def.wide ? ' wide' : '');card.id='card-'+id;
     let caption = def.bool ? `${number(den)} respuestas válidas de ${number(aggregateData.n)} en la selección` :
       def.percentage ? `Porcentaje sobre ${number(aggregateData.n)} respuestas · Selección múltiple` :
-      `${number(base)} respuestas${def.single ? '' : ' con información clasificada'} · Cantidad por categoría`;
-    if (def.excludedLabels) caption=`${number(base-missingCount)} respuestas con categoría identificada de ${number(base)} en la selección · Cantidad por categoría`;
+      `${number(base)} respuestas${def.single ? '' : ' con información clasificada'} · Cantidad y porcentaje por categoría`;
+    if (def.scoped) caption=`${number(den)} respuestas de estas modalidades dentro de ${number(aggregateData.n)} en la selección · Cantidad y porcentaje`;
+    if (def.excludedLabels) caption=`${number(base-missingCount)} respuestas con categoría identificada de ${number(base)} en la selección · Porcentajes sobre ${number(den)} respuestas`;
     card.innerHTML=`<div class="card-head"><div><div class="card-kicker">${escape(def.kicker)}</div><h3>${escape(def.title)}</h3></div><div class="card-actions"><button type="button" class="table-button" aria-expanded="false" aria-controls="table-${id}" aria-label="Ver datos: ${escape(def.title)}">Datos</button><button type="button" class="png-button" aria-label="Descargar gráfico: ${escape(def.title)}">PNG ↓</button></div></div><p class="card-caption">${caption}</p><div class="chart-scroll"><div class="chart-inner"></div></div><div id="table-${id}" class="data-table-wrap" hidden>${tableMarkup(allRows,def)}</div>`;
     const inner = card.querySelector('.chart-inner');
     if (!base || !den || !rows.some(r => r[1])) {
-      inner.className='chart-no-data';inner.innerHTML=missingCount ? '<strong>Sin categoría identificada en esta selección</strong><span>Los casos pendientes se detallan debajo y en la tabla de datos.</span>' : '<strong>Sin respuestas para este gráfico</strong><span>Cambiá los filtros para explorar otros casos.</span>';
+      inner.className='chart-no-data';inner.innerHTML=def.scoped && aggregateData.n ? `<strong>Sin casos de estas modalidades en la selección</strong><span>${escape(def.emptyNote)}</span>` : missingCount ? '<strong>Sin categoría identificada en esta selección</strong><span>Los casos pendientes se detallan debajo y en la tabla de datos.</span>' : '<strong>Sin respuestas para este gráfico</strong><span>Cambiá los filtros para explorar otros casos.</span>';
       card.querySelector('.png-button').disabled=true;
     } else {
       const canvas = document.createElement('canvas');canvas.setAttribute('role','img');canvas.setAttribute('aria-label',`${def.title}. ${number(base)} respuestas. Los valores completos están disponibles en el botón Datos.`);inner.append(canvas);
@@ -141,11 +147,11 @@
         type:pie ? 'pie' : 'bar',
         data:{labels:pie ? labels : labels.map(l => splitLabel(l,labelLimit)),datasets:[{data:values,backgroundColor:pie ? [COLORS.primary,COLORS.orange] : labels.map(barColor),borderWidth:pie ? 4 : 0,borderColor:'#ffffff',borderRadius:pie ? 0 : 4,maxBarThickness:horizontal ? 23 : 65,hoverBackgroundColor:pie ? undefined : COLORS.dark}]},
         plugins:[valueLabels],
-        options:{responsive:true,maintainAspectRatio:false,animation:false,indexAxis:horizontal ? 'y' : 'x',layout:{padding:{top:pie ? 0 : 20,right:horizontal ? 65 : 12,bottom:2}},
+        options:{responsive:true,maintainAspectRatio:false,animation:false,indexAxis:horizontal ? 'y' : 'x',layout:{padding:{top:pie ? 0 : 20,right:horizontal ? 105 : 12,bottom:2}},
           plugins:{legend:{display:false},tooltip:{backgroundColor:'#143d37',padding:12,displayColors:false,
             callbacks:{title:items => splitLabel(labels[items[0].dataIndex],65),label:item => {
               const n=counts[item.dataIndex];
-              return `${number(n)} respuestas${pie || def.percentage || def.single || def.bool ? ' · '+percent(n/den*100) : ''}`;
+              return `${countPercent(n,den)} respuestas`;
             }}},title:{display:false}},
           scales:pie ? {} : {
             x:{grid:{display:horizontal,color:COLORS.grid},border:{display:false},beginAtZero:true,max:horizontal && def.percentage ? 100 : undefined,
@@ -156,30 +162,30 @@
           },
         },
       };
-      const chart = new Chart(canvas,settings);chart.$percent=!!def.percentage;chart.update('none');charts.push(chart);
+      const chart = new Chart(canvas,settings);chart.$counts=counts;chart.$base=den;chart.update('none');charts.push(chart);
       card.querySelector('.png-button').addEventListener('click',() => {
         const a=document.createElement('a');a.download=`cic2023-${id}.png`;a.href=chart.toBase64Image();a.click();
       });
       if (pie) {
         const legend=document.createElement('div');legend.className='pie-legend';
-        legend.innerHTML=rows.map(([label,n],index) => `<div><span class="legend-dot" style="background:${index ? COLORS.orange : COLORS.primary}"></span><span>${escape(label)}</span><strong>${number(n)} · ${percent(n/den*100)}</strong></div>`).join('');
+        legend.innerHTML=rows.map(([label,n],index) => `<div><span class="legend-dot" style="background:${index ? COLORS.orange : COLORS.primary}"></span><span>${escape(label)}</span><strong>${countPercent(n,den)}</strong></div>`).join('');
         card.append(legend);
       }
     }
     if (def.bool) {
       const missing=aggregateData.counts[def.key]?.['Sin respuesta'] || 0;
-      const note=document.createElement('div');note.className='missing-note';note.textContent=`Sin respuesta: ${number(missing)}. Se muestran aparte del porcentaje Sí/No.`;card.append(note);
+      const note=document.createElement('div');note.className='missing-note';note.textContent=`Sin respuesta: ${countPercent(missing,aggregateData.n)} del total de la selección. Los porcentajes Sí/No usan las respuestas válidas.`;card.append(note);
     }
     if (missingCount) {
       const note=document.createElement('div');note.className='missing-note';
-      note.innerHTML=`<strong>${escape(def.missingTitle)}: ${number(missingCount)}.</strong> Incluidas en el total de la selección y en la tabla de datos.<br>${missingRows.map(([label,n]) => `${escape(label)}: ${number(n)}`).join(' · ')}`;
+      note.innerHTML=`<strong>${escape(def.missingTitle)}: ${countPercent(missingCount,aggregateData.n)}.</strong> Incluidas en el total de la selección y en la tabla de datos.<br>${missingRows.map(([label,n]) => `${escape(label)}: ${countPercent(n,aggregateData.n)}`).join(' · ')}`;
       card.append(note);
     }
     if (def.others) {
       const detail = Object.entries(aggregateData.counts[def.others] || {}).sort((a,b) => b[1]-a[1] || a[0].localeCompare(b[0],'es'));
       if (detail.length) {
         const details=document.createElement('details');details.className='others-detail';
-        details.innerHTML=`<summary>Qué incluye Otros en esta selección</summary><ul>${detail.map(([l,n]) => `<li>${escape(l)} <strong>(${number(n)})</strong></li>`).join('')}</ul>`;
+        details.innerHTML=`<summary>Qué incluye Otros en esta selección</summary><ul>${detail.map(([l,n]) => `<li>${escape(l)} <strong>${countPercent(n,den)}</strong></li>`).join('')}</ul>`;
         card.append(details);
       }
     }
@@ -195,23 +201,23 @@
   function renderMap() {
     const counts=aggregateData.counts.province || {}, n=aggregateData.n;
     const card=document.createElement('article');card.className='card map-card';card.id='card-mapa';
-    const properties=(name,extra='') => `class="province-shape${FILTERS.province === name ? ' selected' : ''}${extra}" data-province="${escape(name)}" fill="${mapColor(counts[name] || 0)}" tabindex="0" role="button" aria-label="${escape(name)}: ${counts[name] || 0} respuestas. Seleccionar provincia." aria-pressed="${FILTERS.province === name}"`;
+    const properties=(name,extra='') => `class="province-shape${FILTERS.province === name ? ' selected' : ''}${extra}" data-province="${escape(name)}" fill="${mapColor(counts[name] || 0)}" tabindex="0" role="button" aria-label="${escape(name)}: ${countPercent(counts[name] || 0,n)} respuestas. Seleccionar provincia." aria-pressed="${FILTERS.province === name}"`;
     const [cx,cy]=DATA.map.cabaPoint;
     const cabaCount=counts.CABA || 0;
     const mapSvg=`<svg id="argentina-map" xmlns="http://www.w3.org/2000/svg" viewBox="${DATA.map.viewBox}" role="group" aria-label="Mapa de respuestas por provincia. Seleccioná una provincia para filtrar.">
       <title>Respuestas por provincia de presentación a carrera</title><desc>Las 24 jurisdicciones se representan con colores por cantidad de respuestas. CABA tiene un recuadro ampliado.</desc>
-      ${DATA.map.provinces.map(p => `<path d="${p.d}" ${properties(p.name)}><title>${escape(p.name)}: ${counts[p.name] || 0}</title></path>`).join('')}
+      ${DATA.map.provinces.map(p => `<path d="${p.d}" ${properties(p.name)}><title>${escape(p.name)}: ${countPercent(counts[p.name] || 0,n)}</title></path>`).join('')}
       <text x="518" y="192" class="map-label" fill="#78988b" font-style="italic">Océano Atlántico</text>
       <path class="map-connector" d="M${cx},${cy}L503,371L503,420"/>
       <rect x="480" y="382" width="178" height="215" rx="12" class="inset-box"/>
       <text x="495" y="402" class="map-label" font-size="9">AMPLIACIÓN</text>
-      <path d="${DATA.map.caba}" ${properties('CABA')}><title>CABA: ${cabaCount} respuestas</title></path>
+      <path d="${DATA.map.caba}" ${properties('CABA')}><title>CABA: ${countPercent(cabaCount,n)} respuestas</title></path>
       <text x="565" y="552" text-anchor="middle" class="map-label" font-weight="650">CABA</text>
-      <text x="565" y="580" text-anchor="middle" class="map-count">${cabaCount}</text>
+      <text x="565" y="580" text-anchor="middle" class="map-count">${countPercent(cabaCount,n)}</text>
       <circle cx="${cx}" cy="${cy}" r="5" ${properties('CABA',' caba-marker')}/>
     </svg>`;
     const ranks=DATA.options.province.map(p => [p,counts[p] || 0]).sort((a,b) => b[1]-a[1] || a[0].localeCompare(b[0],'es'));
-    card.innerHTML=`<div class="card-head"><div><div class="card-kicker">DISTRIBUCIÓN TERRITORIAL</div><h3>Provincia de presentación a carrera</h3></div><div class="card-actions"><button class="svg-download" aria-label="Descargar mapa en formato SVG">SVG ↓</button></div></div><p class="card-caption">${number(n)} respuestas · 24 jurisdicciones · Seleccioná una provincia en el mapa o en la lista para filtrar.</p><div class="map-layout"><div class="map-canvas">${mapSvg}<div class="map-legend">${['0','1–4','5–9','10–19','20–49','50 o más'].map((l,i) => `<div><span style="background:${MAP_COLORS[i]}"></span><small>${l}</small></div>`).join('')}</div><div class="map-hint">Cantidad de respuestas · Misma escala para CABA y las provincias</div></div><div class="map-side"><h4>Respuestas por jurisdicción</h4><div class="map-rank">${ranks.map(([p,count]) => `<button type="button" class="${FILTERS.province === p ? 'selected ' : ''}${!count ? 'province-zero' : ''}" data-province="${escape(p)}" aria-pressed="${FILTERS.province === p}"><span>${escape(p)}</span><strong>${number(count)}</strong><small>${n ? percent(count/n*100) : '—'}</small></button>`).join('')}</div></div></div><p class="chart-footnote">La ubicación es la de presentación a carrera, no la residencia actual. CABA se cuenta una sola vez aunque aparezca en su ubicación real y en el recuadro. Vista del territorio continental y Tierra del Fuego. Geometrías: IGN, archivo utilizado en el proyecto OAJ.</p>`;
+    card.innerHTML=`<div class="card-head"><div><div class="card-kicker">DISTRIBUCIÓN TERRITORIAL</div><h3>Provincia de presentación a carrera</h3></div><div class="card-actions"><button class="svg-download" aria-label="Descargar mapa en formato SVG">SVG ↓</button></div></div><p class="card-caption">${number(n)} respuestas · 24 jurisdicciones · Seleccioná una provincia en el mapa o en la lista para filtrar.</p><div class="map-layout"><div class="map-canvas">${mapSvg}<div class="map-legend">${['0','1–4','5–9','10–19','20–49','50 o más'].map((l,i) => `<div><span style="background:${MAP_COLORS[i]}"></span><small>${l}</small></div>`).join('')}</div><div class="map-hint">Cantidad de respuestas · Misma escala para CABA y las provincias</div></div><div class="map-side"><h4>Respuestas por jurisdicción</h4><div class="map-rank">${ranks.map(([p,count]) => `<button type="button" class="${FILTERS.province === p ? 'selected ' : ''}${!count ? 'province-zero' : ''}" data-province="${escape(p)}" aria-pressed="${FILTERS.province === p}"><span>${escape(p)}</span><strong>${number(count)}</strong><small>(${n ? percent(count/n*100) : '—'})</small></button>`).join('')}</div></div></div><p class="chart-footnote">La ubicación es la de presentación a carrera, no la residencia actual. CABA se cuenta una sola vez aunque aparezca en su ubicación real y en el recuadro. Vista del territorio continental y Tierra del Fuego. Geometrías: IGN, archivo utilizado en el proyecto OAJ.</p>`;
     for (const element of card.querySelectorAll('[data-province]')) {
       const province=element.dataset.province;
       const choose=() => {FILTERS.province=FILTERS.province === province ? '' : province;$('province-filter').value=FILTERS.province;refresh();};
@@ -219,7 +225,7 @@
       if (element.tagName !== 'BUTTON') {
         element.addEventListener('keydown',event => {if (event.key==='Enter' || event.key===' ') {event.preventDefault();choose();}});
         const tooltip=$('map-tooltip');
-        const show=event => {tooltip.innerHTML=`<strong>${escape(province)}</strong>${number(counts[province] || 0)} respuestas${n ? ' · '+percent((counts[province] || 0)/n*100) : ''}`;tooltip.hidden=false;const rect=element.getBoundingClientRect();tooltip.style.left=Math.min(window.innerWidth-210,(event.clientX || rect.right)+12)+'px';tooltip.style.top=Math.max(8,Math.min(window.innerHeight-85,(event.clientY || rect.top)+12))+'px';};
+        const show=event => {tooltip.innerHTML=`<strong>${escape(province)}</strong>${countPercent(counts[province] || 0,n)} respuestas`;tooltip.hidden=false;const rect=element.getBoundingClientRect();tooltip.style.left=Math.min(window.innerWidth-210,(event.clientX || rect.right)+12)+'px';tooltip.style.top=Math.max(8,Math.min(window.innerHeight-85,(event.clientY || rect.top)+12))+'px';};
         element.addEventListener('pointermove',show);element.addEventListener('focus',show);
         element.addEventListener('pointerleave',() => tooltip.hidden=true);element.addEventListener('blur',() => tooltip.hidden=true);
       }
@@ -280,7 +286,7 @@
     const lines=[['Sección','Indicador','Categoría','Respuestas','Denominador','Porcentaje','Provincia','Gran área','Modalidad']];
     for (const def of DEFINITIONS.filter(d => d.id!=='solicitud-torta')) {
       const den=denominator(def);
-      for (const [label,n] of rowsFor(def)) lines.push([TABS[def.tab].title,def.title,label,n,den,(def.single || def.bool || def.percentage) && den ? (n/den*100).toFixed(4) : '',FILTERS.province,FILTERS.area,FILTERS.mode]);
+      for (const [label,n] of rowsFor(def)) lines.push([TABS[def.tab].title,def.title,label,n,den,den ? (n/den*100).toFixed(4) : '',FILTERS.province,FILTERS.area,FILTERS.mode]);
       if (def.bool) lines.push([TABS[def.tab].title,def.title,'Sin respuesta',aggregateData.counts[def.key]?.['Sin respuesta'] || 0,aggregateData.n,'',FILTERS.province,FILTERS.area,FILTERS.mode]);
     }
     for (const province of DATA.options.province) lines.push(['Distribución','Provincia de presentación',province,aggregateData.counts.province?.[province] || 0,aggregateData.n,aggregateData.n ? ((aggregateData.counts.province?.[province] || 0)/aggregateData.n*100).toFixed(4) : '',FILTERS.province,FILTERS.area,FILTERS.mode]);
@@ -292,7 +298,7 @@
     const params=new URLSearchParams(location.search);
     for (const key of Object.keys(FILTERS)) {
       const select=$(key+'-filter');
-      for (const label of DATA.options[key]) {const option=document.createElement('option');option.value=option.textContent=label;select.append(option);}
+      for (const label of DATA.options[key]) {const option=document.createElement('option');option.value=label;option.textContent=key==='area' && label==='Gran área sin determinar' ? 'Área no informada (Temas Estratégicos / Proyectos Especiales)' : label;select.append(option);}
       const value=params.get(key);if(DATA.options[key].includes(value)) FILTERS[key]=value;
       select.value=FILTERS[key];select.addEventListener('change',() => {FILTERS[key]=select.value;refresh();});
     }

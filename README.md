@@ -49,3 +49,7 @@ La exportación de datos se genera en el espacio de trabajo privado mediante `co
 - Geometrías provinciales con fuente IGN, tomadas del archivo utilizado en el proyecto OAJ del responsable del relevamiento. La representación y el recuadro de CABA fueron adaptados para este dashboard.
 
 Versión: 16 de noviembre de 2026.
+
+Los valores de los gráficos incluyen cantidad y porcentaje entre paréntesis. Los porcentajes se recalculan con los filtros y conservan la base indicada en cada gráfico. Las preguntas Sí/No usan respuestas válidas. Las clasificaciones de comisión y las correcciones comprobadas de modalidad se contrastaron por nombre con anexos oficiales CIC 2023; los nombres se mantienen fuera de los archivos publicados.
+
+La distribución se presenta en tres universos: grandes áreas de General, Fortalecimiento y Exterior (256 respuestas); sectores de Temas Estratégicos y Tecnología (56); proyectos y líneas de Proyectos Especiales (53). El filtro de gran área sigue utilizando exclusivamente los datos de área conocidos, incluidas las modalidades especiales cuando esa información existe. No se deducen áreas a partir del sector o proyecto. Los denominadores se informan en cada gráfico y en el CSV.
