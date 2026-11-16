@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123b3b">
+  <meta name="description" content="Dashboard del relevamiento de ingresantes CIC 2023: distribución provincial, situación actual, becas, trámites y acciones colectivas. Encuesta de septiembre–octubre de 2026.">
+  <title>Ingresos CIC 2023 · Relevamiento</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23123b3b'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-family='Arial' font-weight='bold' font-size='30' fill='%23d0efbc'%3E23%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/style.css">
+  <script defer src="assets/chart.umd.min.js"></script>
+  <script defer src="assets/data.js"></script>
+  <script defer src="assets/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#contenido">Ir al contenido</a>
+  <aside class="sidebar">
+    <a class="brand" href="#distribucion" aria-label="Ingresos CIC 2023, inicio"><span class="brand-mark">23<span></span></span><span>CIC<span>EL RELEVAMIENTO</span></span></a>
+    <div class="sidebar-caption">EXPLORAR LOS DATOS</div>
+    <nav aria-label="Secciones del dashboard">
+      <a href="#distribucion" data-tab="distribucion"><span class="nav-icon">◫</span>Distribución<span class="nav-no">01</span></a>
+      <a href="#situacion" data-tab="situacion"><span class="nav-icon">▥</span>Situación actual<span class="nav-no">02</span></a>
+      <a href="#tramites" data-tab="tramites"><span class="nav-icon">▤</span>Becas y alta<span class="nav-no">03</span></a>
+      <a href="#acciones" data-tab="acciones"><span class="nav-icon">◎</span>Acciones y particularidades<span class="nav-no">04</span></a>
+    </nav>
+    <div class="sidebar-bottom"><span class="live-dot"></span>CONVOCATORIA 2023<strong>Encuesta 2026</strong><p>365 respuestas para conocer la situación de ingresantes seleccionados.</p><a href="#metodologia" id="method-link">Criterios de lectura ↗</a></div>
+  </aside>
+  <main id="contenido">
+    <header class="page-header">
+      <div><div class="eyebrow">CARRERA DEL INVESTIGADOR CIENTÍFICO Y TECNOLÓGICO</div><h1>Ingresos CIC <span>2023</span></h1><p class="subtitle">Situación de ingresantes seleccionados · Relevamiento de septiembre–octubre de 2026</p></div>
+      <div class="header-actions"><button id="export-csv" class="button secondary">↓ Datos de esta selección</button><a class="offline-link" href="dashboard-cic2023.html" download>Versión sin conexión ↗</a></div>
+    </header>
+    <section class="filters" aria-label="Filtros de todos los gráficos">
+      <div class="filter-heading"><span class="filter-icon">≡</span><strong>Explorá el relevamiento</strong><span>Los filtros se combinan</span></div>
+      <div class="filter-fields">
+        <label>Provincia de presentación<select id="province-filter"><option value="">Todas las provincias</option></select></label>
+        <label>Gran área<select id="area-filter"><option value="">Todas las grandes áreas</option></select></label>
+        <label>Modalidad de ingreso<select id="mode-filter"><option value="">Todas las modalidades</option></select></label>
+        <button id="reset-filters" class="reset-button">Limpiar filtros ↺</button>
+      </div>
+      <div id="filter-status" role="status" aria-live="polite"></div>
+    </section>
+    <section class="kpis" aria-label="Indicadores de la selección" id="kpis"></section>
+    <div class="section-heading"><div><div class="eyebrow" id="section-kicker"></div><h2 id="section-title"></h2><p id="section-description"></p></div><button id="print" class="text-button">Imprimir sección ↗</button></div>
+    <div id="empty-state" class="empty-state" hidden><strong>No hay respuestas con esta combinación.</strong><span>Probá cambiar o limpiar los filtros.</span></div>
+    <section id="charts" class="charts" aria-labelledby="section-title"></section>
+    <section class="reading-notes" id="metodologia">
+      <details id="methodology"><summary>Cómo leer este relevamiento <span>Universos, porcentajes y criterios de clasificación</span></summary><div class="method-grid">
+        <div><h3>Qué representan los números</h3><p>Se cuentan respuestas de esta encuesta, no el total de postulaciones a la convocatoria. La ubicación corresponde al lugar de presentación a carrera; puede ser distinta de la residencia actual.</p><p>El ranking de institutos se dejó para una etapa posterior.</p></div>
+        <div><h3>Porcentajes y respuestas vacías</h3><p>En las preguntas Sí/No, el porcentaje usa solo respuestas válidas. Los vacíos se muestran aparte. Completar el trámite de alta no equivale a tener el ingreso efectivizado.</p><p>En acciones colectivas, el porcentaje usa todas las respuestas de la selección: sin filtros, 365. Las categorías múltiples pueden sumar más del 100 %.</p></div>
+        <div><h3>Clasificación de comentarios</h3><p>Una respuesta puede pertenecer a varias categorías. Las categorías de un solo caso en acciones y particularidades se agruparon en Otros antes de aplicar filtros; esa agrupación permanece estable.</p><p>Las preguntas sobre situación actual y formas de permanencia conservan sus universos propios. No se reemplazaron los Sí/No a partir de los comentarios.</p></div>
+        <div><h3>Fechas y actualizaciones</h3><p>La encuesta se completó entre el 15 de septiembre y el 27 de octubre de 2026. Las extensiones posdoctorales CONICET se actualizaron a Hasta el alta por indicación del responsable del relevamiento.</p><p>Una fecha de julio de 2026 se interpretó por contexto y conserva esa aclaración; no se supuso que esa beca estuviera vencida. El resto describe la situación informada en la encuesta.</p></div>
+      </div></details>
+    </section>
+    <footer><span>RELEVAMIENTO CIC 2023 <span class="footer-divider">/</span> Encuesta 2026</span><span>Datos clasificados y revisados · Versión 16/11/2026</span></footer>
+  </main>
+  <div id="map-tooltip" class="map-tooltip" role="tooltip" hidden></div>
+  <noscript><p class="noscript">Activá JavaScript para explorar los gráficos y los filtros del dashboard.</p></noscript>
+</body>
+</html>
